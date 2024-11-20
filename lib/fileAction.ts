@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { Node } from './files/node'
-import { View } from './navigation/view'
+import type { ActionContext, ActionContextSingle } from './types'
 import logger from './utils/logger'
 
 export enum DefaultType {
@@ -16,13 +15,13 @@ export interface FileActionData {
 	/** Unique ID */
 	id: string
 	/** Translatable string displayed in the menu */
-	displayName: (files: Node[], view: View) => string
+	displayName: (context: ActionContext) => string
 	/** Translatable title for of the action */
-	title?: (files: Node[], view: View) => string
+	title?: (context: ActionContext) => string
 	/** Svg as inline string. <svg><path fill="..." /></svg> */
-	iconSvgInline: (files: Node[], view: View) => string
+	iconSvgInline: (context: ActionContext) => string
 	/** Condition wether this action is shown or not */
-	enabled?: (files: Node[], view: View) => boolean
+	enabled?: (context: ActionContext) => boolean
 
 	/**
 	 * Function executed on single file action
@@ -30,14 +29,14 @@ export interface FileActionData {
 	 * false otherwise and null if the action is silent/undefined.
 	 * @throws Error if the action failed
 	 */
-	exec: (file: Node, view: View, dir: string) => Promise<boolean|null>,
+	exec: (context: ActionContextSingle) => Promise<boolean|null>,
 	/**
 	 * Function executed on multiple files action
 	 * @return true if the action was executed successfully,
 	 * false otherwise and null if the action is silent/undefined.
 	 * @throws Error if the action failed
 	 */
-	execBatch?: (files: Node[], view: View, dir: string) => Promise<(boolean|null)[]>
+	execBatch?: (context: ActionContext) => Promise<(boolean|null)[]>
 
 	/** This action order in the list */
 	order?: number,
@@ -67,12 +66,12 @@ export interface FileActionData {
 	/**
 	 * If true, the renderInline function will be called
 	 */
-	inline?: (file: Node, view: View) => boolean,
+	inline?: (context: ActionContext) => boolean,
 	/**
 	 * If defined, the returned html element will be
 	 * appended before the actions menu.
 	 */
-	renderInline?: (file: Node, view: View) => Promise<HTMLElement | null>,
+	renderInline?: (context: ActionContext) => Promise<HTMLElement | null>,
 }
 
 export class FileAction {
