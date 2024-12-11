@@ -3,45 +3,32 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { Node } from './files/node.ts'
-import { Folder } from './files/folder.ts'
-import { View } from './navigation/view.ts'
-import logger from './utils/logger.ts'
+import type { ActionContext, ViewActionContext } from './types'
 
-interface ActionContext {
-	folder: Folder,
-}
+import logger from './utils/logger.ts'
 
 interface FileListActionData {
 	/** Unique ID */
 	id: string
 
 	/** Translated name of the action */
-	displayName: (view: View) => string
+	displayName: (context: ViewActionContext) => string
 
 	/** Raw svg string */
-	iconSvgInline: (view: View) => string
+	iconSvgInline: (context: ViewActionContext) => string
 
 	/** Sort order */
 	order: number
 
 	/**
-	 * Returns true if this action shoud be shown
-	 *
-	 * @param nodes The nodes in the current directory
-	 * @param context The context
-	 * @param context.folder The current folder
+	 * Returns true if this action should be shown
 	 */
-	enabled?: (view: View, nodes: Node[], context: ActionContext) => boolean
+	enabled?: (context: ViewActionContext) => boolean
 
 	/**
-	 * Function to execute
-	 *
-	 * @param nodes The nodes in the current directory
-	 * @param context The context
-	 * @param context.folder The current folder
+	 * Function to execute the action
 	 */
-	exec: (view: View, nodes: Node[], context: ActionContext) => Promise<void>
+	exec: (context: ActionContext) => Promise<void>
 }
 
 export class FileListAction {

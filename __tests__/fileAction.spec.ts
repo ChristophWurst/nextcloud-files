@@ -2,12 +2,14 @@
  * SPDX-FileCopyrightText: 2023-2024 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-import type { Node } from '../lib/files/node'
-import type { View } from '../lib/navigation/view'
+import type { Node, Folder, View } from '../lib/index.ts'
 
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { getFileActions, registerFileAction, FileAction, DefaultType, FileActionData } from '../lib/fileAction'
 import logger from '../lib/utils/logger'
+
+const context = {} as Folder
+const view = {} as View
 
 describe('FileActions init', () => {
 
@@ -33,8 +35,8 @@ describe('FileActions init', () => {
 		})
 
 		expect(action.id).toBe('test')
-		expect(action.displayName([], {} as unknown as View)).toBe('Test')
-		expect(action.iconSvgInline([], {} as unknown as View)).toBe('<svg></svg>')
+		expect(action.displayName({ view, context, nodes: [] })).toBe('Test')
+		expect(action.iconSvgInline({ view, context, nodes: [] })).toBe('<svg></svg>')
 
 		registerFileAction(action)
 
@@ -243,18 +245,20 @@ describe('FileActions creation', () => {
 			},
 		})
 
+		const node = {} as Node
+
 		expect(action.id).toBe('test')
-		expect(action.displayName([], {} as unknown as View)).toBe('Test')
-		expect(action.title?.([], {} as unknown as View)).toBe('Test title')
-		expect(action.iconSvgInline([], {} as unknown as View)).toBe('<svg></svg>')
-		await expect(action.exec({} as unknown as Node, {} as unknown as View, '/')).resolves.toBe(true)
-		await expect(action.execBatch?.([], {} as unknown as View, '/')).resolves.toStrictEqual([true])
-		expect(action.enabled?.([], {} as unknown as View)).toBe(true)
+		expect(action.displayName({ view, context, nodes: [] })).toBe('Test')
+		expect(action.title?.({ view, context, nodes: [] })).toBe('Test title')
+		expect(action.iconSvgInline({ view, context, nodes: [] })).toBe('<svg></svg>')
+		await expect(action.exec({ view, context, nodes: [node] })).resolves.toBe(true)
+		await expect(action.execBatch?.({ view, context, nodes: [] })).resolves.toStrictEqual([true])
+		expect(action.enabled?.({ view, context, nodes: [] })).toBe(true)
 		expect(action.order).toBe(100)
 		expect(action.parent).toBe('123')
 		expect(action.destructive).toBe(true)
 		expect(action.default).toBe(DefaultType.DEFAULT)
-		expect(action.inline?.({} as unknown as Node, {} as unknown as View)).toBe(true)
-		expect((await action.renderInline?.({} as unknown as Node, {} as unknown as View))?.outerHTML).toBe('<span>test</span>')
+		expect(action.inline?.({ view, context, nodes: [] })).toBe(true)
+		expect((await action.renderInline?.({ view, context, nodes: [] }))?.outerHTML).toBe('<span>test</span>')
 	})
 })
