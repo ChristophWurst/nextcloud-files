@@ -13,7 +13,7 @@ export type ContentsWithRoot = {
 	contents: Node[]
 }
 
-interface ViewData {
+export interface ViewData {
 	/** Unique view ID */
 	id: string
 	/** Translated view name */
@@ -27,7 +27,7 @@ interface ViewData {
 	emptyCaption?: string
 
 	/**
-	 * Method return the content of the  provided path
+	 * Method return the content of the provided path
 	 * This ideally should be a cancellable promise.
 	 * promise.cancel(reason) will be called when the directory
 	 * change and the promise is not resolved yet.
@@ -35,6 +35,7 @@ interface ViewData {
 	 * information alongside with its content.
 	 */
 	getContents: (path: string) => Promise<ContentsWithRoot>
+
 	/** The view icon as an inline svg */
 	icon: string
 
@@ -86,8 +87,13 @@ export class View implements ViewData {
 
 	private _view: ViewData
 
+	// TODO: This should not be a constructor but a static method like `fromData` or similar
+	// instead the constructor should be private so we can just inherit from this class without need of validation
 	constructor(view: ViewData) {
-		isValidView(view)
+		// second parameter is checking if **this** class is just View or a child class,
+		// this is needed because child classes can implement `getContents` as a method
+		// so they would not pass it to the ViewData - but this should only allowed from a child constructor
+		isValidView(view, Object.getPrototypeOf(this) === View.prototype)
 		this._view = view
 	}
 
@@ -111,8 +117,11 @@ export class View implements ViewData {
 		return this._view.emptyCaption
 	}
 
-	get getContents() {
-		return this._view.getContents
+	getContents(path: string) {
+		if (!this._view.getContents) {
+			throw new Error('When inheriting the `View` class you need to implement the `getContents` method!')
+		}
+		return this._view.getContents(path)
 	}
 
 	get icon() {
@@ -143,8 +152,17 @@ export class View implements ViewData {
 		return this._view.columns
 	}
 
-	get emptyView() {
-		return this._view.emptyView
+	/**
+	 * True if this view provides a custom empty view, false otherwise.
+	 */
+	get hasEmptyView(): boolean {
+		return this._view.emptyView !== undefined
+	}
+
+	emptyView(div: HTMLDivElement) {
+		if (this._view.emptyView) {
+			this._view.emptyView(div)
+		}
 	}
 
 	get parent() {
@@ -167,8 +185,11 @@ export class View implements ViewData {
 		return this._view.defaultSortKey
 	}
 
-	get loadChildViews() {
-		return this._view.loadChildViews
+	loadChildViews(view: View) {
+		if (this._view.loadChildViews) {
+			return this._view.loadChildViews(view)
+		}
+		return Promise.resolve()
 	}
 
 }
@@ -177,11 +198,12 @@ export class View implements ViewData {
  * Typescript cannot validate an interface.
  * Please keep in sync with the View interface requirements.
  *
- * @param {ViewData} view the view to check
+ * @param view the view to check
+ * @param strict if this validation should be strict (check all props)
  * @return {boolean} true if the column is valid
  * @throws {Error} if the view is not valid
  */
-const isValidView = function(view: ViewData): boolean {
+const isValidView = function(view: ViewData, strict = true): boolean {
 	if (!view.id || typeof view.id !== 'string') {
 		throw new Error('View id is required and must be a string')
 	}
@@ -194,7 +216,9 @@ const isValidView = function(view: ViewData): boolean {
 		throw new Error('View caption must be a string')
 	}
 
-	if (!view.getContents || typeof view.getContents !== 'function') {
+	// If the view is a child class of View getContents could be a member function
+	// so it would not be part of the ViewData
+	if (strict && (!view.getContents || typeof view.getContents !== 'function')) {
 		throw new Error('View getContents is required and must be a function')
 	}
 
@@ -202,7 +226,7 @@ const isValidView = function(view: ViewData): boolean {
 		throw new Error('View icon is required and must be a valid svg string')
 	}
 
-	if ('order' in view && typeof view.order !== 'number') {
+	if (view.order !== undefined && typeof view.order !== 'number') {
 		throw new Error('View order must be a number')
 	}
 
@@ -223,11 +247,11 @@ const isValidView = function(view: ViewData): boolean {
 		throw new Error('View parent must be a string')
 	}
 
-	if ('sticky' in view && typeof view.sticky !== 'boolean') {
+	if (view.sticky !== undefined && typeof view.sticky !== 'boolean') {
 		throw new Error('View sticky must be a boolean')
 	}
 
-	if ('expanded' in view && typeof view.expanded !== 'boolean') {
+	if (view.expanded !== undefined && typeof view.expanded !== 'boolean') {
 		throw new Error('View expanded must be a boolean')
 	}
 
