@@ -2,13 +2,12 @@
  * SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-new */
 import { describe, expect, test, beforeEach, vi } from 'vitest'
 
 import { Folder } from '../lib/files/folder'
 import { Header, getFileListHeaders, registerFileListHeaders } from '../lib/fileListHeaders'
+import { View } from '../lib/navigation/view'
 import logger from '../lib/utils/logger'
 
 describe('FileListHeader init', () => {
@@ -37,7 +36,7 @@ describe('FileListHeader init', () => {
 
 		expect(header.id).toBe('test')
 		expect(header.order).toBe(1)
-		expect(header.enabled!({} as Folder, {})).toBe(true)
+		expect(header.enabled!({} as Folder, {} as View)).toBe(true)
 
 		registerFileListHeaders(header)
 
@@ -103,7 +102,7 @@ describe('FileListHeader validate', () => {
 				id: null,
 				render: () => {},
 				updated: () => {},
-			} as any as Header)
+			} as unknown as Header)
 		}).toThrowError('Invalid header: id, render and updated are required')
 
 		expect(() => {
@@ -111,7 +110,7 @@ describe('FileListHeader validate', () => {
 				id: '123',
 				render: null,
 				updated: () => {},
-			} as any as Header)
+			} as unknown as Header)
 		}).toThrowError('Invalid header: id, render and updated are required')
 
 		expect(() => {
@@ -119,7 +118,7 @@ describe('FileListHeader validate', () => {
 				id: '123',
 				render: () => {},
 				updated: null,
-			} as any as Header)
+			} as unknown as Header)
 		}).toThrowError('Invalid header: id, render and updated are required')
 	})
 	test('Invalid id', () => {
@@ -128,7 +127,7 @@ describe('FileListHeader validate', () => {
 				id: true,
 				render: () => {},
 				updated: () => {},
-			} as any as Header)
+			} as unknown as Header)
 		}).toThrowError('Invalid id property')
 	})
 	test('Invalid enabled', () => {
@@ -138,7 +137,7 @@ describe('FileListHeader validate', () => {
 				enabled: true,
 				render: () => {},
 				updated: () => {},
-			} as any as Header)
+			} as unknown as Header)
 		}).toThrowError('Invalid enabled property')
 	})
 	test('Invalid render', () => {
@@ -148,7 +147,7 @@ describe('FileListHeader validate', () => {
 				enabled: () => {},
 				render: true,
 				updated: () => {},
-			} as any as Header)
+			} as unknown as Header)
 		}).toThrowError('Invalid render property')
 	})
 	test('Invalid updated', () => {
@@ -158,7 +157,7 @@ describe('FileListHeader validate', () => {
 				enabled: () => {},
 				render: () => {},
 				updated: true,
-			} as any as Header)
+			} as unknown as Header)
 		}).toThrowError('Invalid updated property')
 	})
 })
@@ -182,9 +181,9 @@ describe('FileListHeader exec', () => {
 		expect(header.render).toBe(render)
 		expect(header.updated).toBe(updated)
 
-		header.enabled!({} as Folder, {})
-		header.render(null as any as HTMLElement, {} as Folder, {})
-		header.updated({} as Folder, {})
+		header.enabled!({} as Folder, {} as View)
+		header.render({} as HTMLElement, {} as Folder, {} as View)
+		header.updated({} as Folder, {} as View)
 
 		expect(enabled).toHaveBeenCalled()
 		expect(render).toHaveBeenCalled()
