@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 import { describe, it, expect, vi } from 'vitest'
-import { Navigation, getNavigation } from '../lib/navigation/navigation'
-import { View } from '../lib/navigation/view'
+import { Navigation, getNavigation } from '../../lib/navigation/navigation'
+import { View } from '../../lib/navigation/view'
 
 const mockView = (id = 'view', order = 1) => new View({ id, order, name: 'View', icon: '<svg></svg>', getContents: () => Promise.reject(new Error()) })
 
